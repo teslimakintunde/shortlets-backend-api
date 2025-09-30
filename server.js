@@ -1,0 +1,124 @@
+const cookieParser = require("cookie-parser");
+const express = require("express");
+const corsOptions = require("./config/corsOption");
+const cors = require("cors");
+const { Server } = require("socket.io");
+const http = require("http");
+const cookie = require("cookie");
+const jwt = require("jsonwebtoken");
+
+const PORT = process.env.PORT || 5000;
+const app = express();
+const server = http.createServer(app);
+
+// CORS configuration
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(cors(corsOptions));
+
+// Socket.io setup
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+  },
+});
+
+// Socket.io authentication middleware
+io.use((socket, next) => {
+  try {
+    // getting token from handshake auth first
+    let token = socket.handshake.auth.token;
+
+    // If not found in auth, try to get from cookies
+    if (!token && socket.handshake.headers.cookie) {
+      const cookies = socket.handshake.headers.cookie.split(";");
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "token") {
+          token = decodeURIComponent(value);
+          break;
+        }
+      }
+    }
+
+    console.log("Socket auth attempt");
+
+    if (!token) {
+      console.log("No token provided");
+      return next(new Error("Authentication error: No token provided"));
+    }
+
+    // Verify token - using the same key as auth controller
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    socket.userId = decoded.id;
+    console.log(`User ${socket.userId} authenticated successfully`);
+    next();
+  } catch (err) {
+    console.error("Token verification error:", err.message);
+    next(new Error("Authentication error: Invalid token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log(`User ${socket.userId} connected with socket ID: ${socket.id}`);
+
+  // Joining user to their own room for private messages
+  socket.join(`user_${socket.userId}`);
+
+  // Handling sending messages
+  socket.on("sendMessage", (data) => {
+    console.log("sendMessage event received:", data);
+    const { chatId, message, receiverId, senderId } = data;
+
+    // Emitting to the receiver
+    socket.to(`user_${receiverId}`).emit("newMessage", {
+      chatId,
+      message,
+      senderId: socket.userId,
+    });
+
+    //  emitting to sender for real-time update
+    socket.emit("newMessage", {
+      chatId,
+      message,
+      senderId: senderId,
+    });
+  });
+
+  // Handleing disconnect
+  socket.on("disconnect", (reason) => {
+    console.log(`User ${socket.userId} disconnected:`, reason);
+  });
+});
+
+// Middleware to attach io to requests
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+app.use("/api/google", require("./routes/googleApi"));
+app.use("/api/auth", require("./routes/authRoute"));
+app.use("/api/test", require("./routes/testRoute"));
+app.use("/api/posts", require("./routes/postRoute"));
+app.use("/api/users", require("./routes/userRoute"));
+
+app.use("/api/chats", require("./routes/chatRoute"));
+app.use("/api/messages", require("./routes/messageRoute"));
+
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", message: "Server is running" });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
