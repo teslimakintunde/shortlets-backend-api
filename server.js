@@ -115,6 +115,13 @@ app.use("/api/users", require("./routes/userRoute"));
 app.use("/api/chats", require("./routes/chatRoute"));
 app.use("/api/messages", require("./routes/messageRoute"));
 
+app.use("/api/payments", require("./routes/paymentRoute"));
+
+app.use("/api/bookings", require("./routes/bookingRoute"));
+app.use("/api/sales", require("./routes/saleRoute"));
+
+app.use("/api/reviews", require("./routes/reviewRoute"));
+
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "Server is running" });
 });
