@@ -106,7 +106,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/google", require("./routes/googleApi"));
 app.use("/api/auth", require("./routes/authRoute"));
 app.use("/api/test", require("./routes/testRoute"));
 app.use("/api/posts", require("./routes/postRoute"));

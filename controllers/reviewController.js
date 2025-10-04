@@ -101,8 +101,6 @@ const getSingleReview = async (req, res) => {
 };
 
 const createReview = async (req, res) => {
-  // Validation removed - no more validation checks
-
   const tokenUserId = req.userId ? parseInt(req.userId) : null;
   const reviewData = sanitizeReview(req.body);
 
@@ -258,7 +256,6 @@ const createReview = async (req, res) => {
   }
 };
 
-// Helper function to update post rating
 async function updatePostRating(postId) {
   const reviews = await prisma.review.findMany({
     where: {
