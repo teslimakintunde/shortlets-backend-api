@@ -21,13 +21,7 @@ router.get("/", verifyToken, getAllReviews);
 router.get("/user/:userId", verifyToken, getUserReviews);
 router.get("/:id", verifyToken, getSingleReview);
 
-// Protected routes with validation
-router.post(
-  "/",
-  verifyToken,
-
-  createReview
-);
+router.post("/", verifyToken, createReview);
 
 router.delete("/:id", verifyToken, shouldBeAdmin, deleteReview);
 

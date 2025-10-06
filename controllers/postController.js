@@ -675,6 +675,69 @@ const adminDeletePost = async (req, res) => {
   }
 };
 
+const getFeaturedPosts = async (req, res) => {
+  const { limit = 4 } = req.query;
+
+  try {
+    const featuredPosts = await prisma.post.findMany({
+      where: {
+        isActive: true,
+      },
+      include: {
+        owner: {
+          select: {
+            username: true,
+            avatar: true,
+          },
+        },
+        postDetail: {
+          select: {
+            wifi: true,
+            airConditioning: true,
+            parking: true,
+            furnished: true,
+            size: true,
+          },
+        },
+
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+      },
+      orderBy: [
+        { createdAt: "desc" }, // Newest first
+      ],
+      take: parseInt(limit),
+    });
+
+    // Calculating average rating for each post
+    const transformedPosts = featuredPosts.map((post) => ({
+      ...post,
+      images: Array.isArray(post.images) ? post.images : [],
+      averageRating:
+        post.reviews.length > 0
+          ? post.reviews.reduce((sum, review) => sum + review.rating, 0) /
+            post.reviews.length
+          : 4.8, // Default rating if no reviews
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: transformedPosts,
+      total: transformedPosts.length,
+    });
+  } catch (err) {
+    console.error("Error fetching featured posts:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch featured posts",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
+
 module.exports = {
   getAllPosts,
   getSinglePost,
@@ -682,4 +745,5 @@ module.exports = {
   updatePost,
   deletePost,
   adminDeletePost,
+  getFeaturedPosts,
 };

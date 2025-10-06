@@ -50,17 +50,14 @@ io.use((socket, next) => {
       }
     }
 
-    console.log("Socket auth attempt");
-
     if (!token) {
-      console.log("No token provided");
       return next(new Error("Authentication error: No token provided"));
     }
 
     // Verify token - using the same key as auth controller
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     socket.userId = decoded.id;
-    console.log(`User ${socket.userId} authenticated successfully`);
+
     next();
   } catch (err) {
     console.error("Token verification error:", err.message);
@@ -76,7 +73,6 @@ io.on("connection", (socket) => {
 
   // Handling sending messages
   socket.on("sendMessage", (data) => {
-    console.log("sendMessage event received:", data);
     const { chatId, message, receiverId, senderId } = data;
 
     // Emitting to the receiver
