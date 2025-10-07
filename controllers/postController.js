@@ -737,7 +737,100 @@ const getFeaturedPosts = async (req, res) => {
     });
   }
 };
+const getUserPosts = async (req, res) => {
+  const { page = 1, limit = 2 } = req.query; // NEW: Parse params
+  const skip = (page - 1) * limit;
+  const whereClause = { ownerId: req.userId, isActive: true }; // Assuming authenticated
 
+  const [posts, totalCount] = await Promise.all([
+    prisma.post.findMany({
+      where: whereClause,
+      include: {
+        /* your includes */
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: parseInt(limit),
+    }),
+    prisma.post.count({ where: whereClause }),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    data: posts.map((p) => ({
+      ...p,
+      images: Array.isArray(p.images) ? p.images : [],
+    })),
+    total: totalCount,
+    totalPages: Math.ceil(totalCount / parseInt(limit)),
+  });
+};
+
+const getSavedPosts = async (req, res) => {
+  const { page = 1, limit = 2 } = req.query; // Parse pagination params
+  const skip = (page - 1) * parseInt(limit);
+
+  try {
+    // Counting with relation filter (supported in count)
+    const totalCount = await prisma.savedPost.count({
+      where: {
+        userId: req.userId,
+        post: { isActive: true }, // Filter active posts
+      },
+    });
+
+    // findMany without where in include; filter in JS
+    const savedPosts = await prisma.savedPost.findMany({
+      where: { userId: req.userId },
+      include: {
+        post: {
+          include: {
+            owner: {
+              select: { username: true, avatar: true },
+            },
+            postDetail: {
+              select: {
+                wifi: true,
+                airConditioning: true,
+                parking: true,
+                furnished: true,
+                size: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" }, // Most recent saves first
+      skip,
+      take: parseInt(limit),
+    });
+
+    //Filtering active posts in JS and transform
+    const posts = savedPosts
+      .filter((saved) => saved.post.isActive) // Only active
+      .map((saved) => ({
+        ...saved.post,
+        isSaved: true, // Explicitly mark as saved
+        savedAt: saved.createdAt, // Optional: Save date
+        images: Array.isArray(saved.post.images) ? saved.post.images : [],
+      }));
+
+    res.status(200).json({
+      success: true,
+      data: posts,
+      total: totalCount,
+      totalPages: Math.ceil(totalCount / parseInt(limit)),
+      page: parseInt(page),
+    });
+  } catch (err) {
+    console.error("Error fetching saved posts:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch saved posts",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+};
 module.exports = {
   getAllPosts,
   getSinglePost,
@@ -746,4 +839,6 @@ module.exports = {
   deletePost,
   adminDeletePost,
   getFeaturedPosts,
+  getUserPosts,
+  getSavedPosts,
 };

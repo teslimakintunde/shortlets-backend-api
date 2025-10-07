@@ -2,7 +2,6 @@ const prisma = require("../lib/prisma");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const crypto = require("crypto");
 
-// Encryption key (in production, use proper key management)
 const ENCRYPTION_KEY =
   process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString("hex");
 const IV_LENGTH = 16;
@@ -161,7 +160,7 @@ const createPaymentIntent = async (req, res) => {
   }
 
   try {
-    // Validate post exists and check ownership
+    // Validating post exists and checking ownership
     if (postId) {
       const post = await prisma.post.findUnique({
         where: { id: parseInt(postId) },
@@ -172,7 +171,7 @@ const createPaymentIntent = async (req, res) => {
           .status(404)
           .json({ success: false, message: "Post not found" });
       }
-      // Prevent owner from paying for their own property
+      // Preventing owner from paying for their own property
       if (post.ownerId === tokenUserId) {
         return res.status(403).json({
           success: false,
@@ -183,7 +182,7 @@ const createPaymentIntent = async (req, res) => {
 
     // Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(parseFloat(amount) * 100), // Convert NGN to kobo
+      amount: Math.round(parseFloat(amount) * 100), // Converting NGN to kobo
       currency: (currency || "ngn").toLowerCase(), // Default to NGN
       payment_method_types: ["card"],
       metadata: {
@@ -590,19 +589,6 @@ const cleanupStalePayments = async (req, res) => {
   }
 };
 
-const handlePaymentSuccess = async (paymentIntent) => {
-  await prisma.payment.updateMany({
-    where: { transactionId: paymentIntent.id },
-    data: { status: "completed", completedAt: new Date() },
-  });
-};
-
-const handlePaymentFailure = async (paymentIntent) => {
-  await prisma.payment.updateMany({
-    where: { transactionId: paymentIntent.id },
-    data: { status: "failed" },
-  });
-};
 module.exports = {
   getAllPayments,
   getSinglePayment,
@@ -612,5 +598,5 @@ module.exports = {
   getUserCards,
   addPaymentCard,
   deletePaymentCard,
-  cleanupStalePayments, // Add to exports
+  cleanupStalePayments,
 };
