@@ -229,10 +229,8 @@ const confirmPayment = async (req, res) => {
   try {
     // Verify the payment intent
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    console.log("Payment intent status:", paymentIntent.status);
 
     if (paymentIntent.status !== "succeeded") {
-      console.log("Payment intent status:", paymentIntent.status);
       return res.status(400).json({
         success: false,
         message: `Payment not completed. Status: ${paymentIntent.status}`,
