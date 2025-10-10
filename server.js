@@ -60,7 +60,6 @@ io.use((socket, next) => {
 
     next();
   } catch (err) {
-    console.error("Token verification error:", err.message);
     next(new Error("Authentication error: Invalid token"));
   }
 });

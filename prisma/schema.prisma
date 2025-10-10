@@ -162,8 +162,8 @@ model Post {
   zipCode    String?
   bedroom    Int
   bathroom   Int
-  latitude   Float
-  longitude  Float
+  latitude   Float?
+  longitude  Float?
   type       Type
   property   Property
   isActive   Boolean   @default(true)
@@ -218,7 +218,7 @@ model Post {
 
 model PostDetail {
   id          Int      @id @default(autoincrement())
-  description String   @db.Text 
+  description String?   @db.Text 
   
   // Add the missing fields from frontend
   utilities   String?  @default("owner")
