@@ -168,8 +168,10 @@ const updatePost = async (req, res) => {
             : existingPost.bathroom,
           type: postData?.type || existingPost.type,
           property: postData?.property || existingPost.property,
-          latitude: postData?.latitude || existingPost.latitude,
-          longitude: postData?.longitude || existingPost.longitude,
+          latitude: postData?.latitude ? parseFloat(postData.latitude) : null,
+          longitude: postData?.longitude
+            ? parseFloat(postData.longitude)
+            : null,
           images: postData?.images || existingPost.images,
           state: postData?.state || existingPost.state,
           country: postData?.country || existingPost.country,
@@ -532,8 +534,8 @@ const addPost = async (req, res) => {
         bathroom: postData.bathroom ? parseInt(postData.bathroom) : 1,
         type: postData.type || "rent",
         property: postData.property || "apartment",
-        latitude: postData.latitude ? parseFloat(postData.latitude) : 0,
-        longitude: postData.longitude ? parseFloat(postData.longitude) : 0,
+        latitude: postData.latitude ? parseFloat(postData.latitude) : null,
+        longitude: postData.longitude ? parseFloat(postData.longitude) : null,
         images: postData.images || [],
         state: postData.state || "",
         country: postData.country || "",
