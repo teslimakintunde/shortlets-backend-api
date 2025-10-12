@@ -14,7 +14,7 @@ const server = http.createServer(app);
 // CORS configuration
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://shortlet-app-chi.vercel.app" || "http://localhost:5173",
     credentials: true,
   })
 );
@@ -27,7 +27,7 @@ app.use(cors(corsOptions));
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://shortlet-app-chi.vercel.app" || "http://localhost:5173",
     credentials: true,
   },
 });
