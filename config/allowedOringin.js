@@ -1,5 +1,6 @@
 const allowedOrigine = [
-  "https://shortlet-app-chi.vercel.app" || "http://localhost:5173",
+  "http://localhost:5173",
+  "https://shortlets-app.vercel.app",
 ];
 
 module.exports = allowedOrigine;

@@ -1,23 +1,17 @@
 const cookieParser = require("cookie-parser");
 const express = require("express");
-const corsOptions = require("./config/corsOption");
 const cors = require("cors");
 const { Server } = require("socket.io");
 const http = require("http");
 const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
+const allowedOrigine = require("./config/allowedOringin");
+const corsOptions = require("./config/corsOptions");
+require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
 const app = express();
 const server = http.createServer(app);
-
-// CORS configuration
-app.use(
-  cors({
-    origin: "https://shortlet-app-chi.vercel.app" || "http://localhost:5173",
-    credentials: true,
-  })
-);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -27,7 +21,7 @@ app.use(cors(corsOptions));
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: "https://shortlet-app-chi.vercel.app" || "http://localhost:5173",
+    origin: allowedOrigine,
     credentials: true,
   },
 });
