@@ -10,10 +10,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 
 enum UserRole {
   user      // Default role
@@ -97,8 +96,6 @@ enum BookingStatus {
 
 // ============ MODELS ============
 
-
-
 model User {
   id         Int       @id @default(autoincrement())
   email      String    @unique
@@ -108,7 +105,7 @@ model User {
   role       UserRole  @default(user)
   isActive   Boolean   @default(true)
   createdAt  DateTime  @default(now())
-  
+
   // Relations
   listedPosts      Post[]          @relation("PostOwner")
   buyerChats       Chat[]          @relation("BuyerChats")
@@ -133,7 +130,6 @@ model User {
   @@index([role])
 }
 
-
 model UserProfile {
   id        Int     @id @default(autoincrement())
   user      User    @relation(fields: [userId], references: [id])
@@ -143,12 +139,11 @@ model UserProfile {
   country   String?
   state   String?
   city      String?
-  
+
   @@index([country])
   @@index([state])
   @@index([city])
 }
-
 
 model Post {
   id         Int      @id @default(autoincrement())
@@ -215,34 +210,33 @@ model Post {
   @@index([maxGuests])
 }
 
-
 model PostDetail {
   id          Int      @id @default(autoincrement())
-  description String?   @db.Text 
-  
+  description String?   @db.Text
+
   // Add the missing fields from frontend
   utilities   String?  @default("owner")
   income      String?
   school      Int?     // Minutes to school
   bus         Int?     // Minutes to bus
   restaurant  Int?     // Minutes to restaurant
-  
+
   // Existing amenities & features
   wifi               Boolean @default(false)
   airConditioning    Boolean @default(false)
   parking            Boolean @default(false)
   securityPersonnel  Boolean @default(false)
-  
+
   // Pet Policy
   pet                String?
-  
+
   // Property Details
   size               Int?    // Square footage/meters
   floorNumber        Int?
   totalFloors        Int?
   yearBuilt          Int?
   furnished          Boolean @default(false)
-  
+
   // Nearby Facilities
   airport            Int?    // Minutes to airport
   supermarket        Int?    // Minutes to supermarket
@@ -252,10 +246,10 @@ model PostDetail {
   beach              Int?    // Minutes to beach
   publicTransport    Int?    // Minutes to public transport
   restaurants        Int?    // Minutes to restaurants
-  
+
   // Additional utilities
   additionalUtilities String?
-  
+
   // Relations
   post       Post    @relation(fields: [postId], references: [id])
   postId     Int     @unique
@@ -341,7 +335,7 @@ model Payment {
   description    String?
   metadata       Json?
   transactionType TransactionType?
-  
+
   // Relations
   user      User         @relation(fields: [userId], references: [id])
   userId    Int
@@ -351,10 +345,10 @@ model Payment {
   cardId    Int?
   booking   Booking?     @relation(fields: [bookingId], references: [id])
   bookingId Int?         @unique
-  
+
   // Add relation to Review
   reviews   Review[]
-  
+
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   completedAt    DateTime?
@@ -378,7 +372,7 @@ model PaymentCard {
   isDefault     Boolean   @default(false)
   lastFour      String
   isActive      Boolean   @default(true)
-  
+
   // Relations
   user      User      @relation(fields: [userId], references: [id])
   userId    Int
@@ -400,7 +394,7 @@ model Review {
   status           ReviewStatus  @default(approved)
   isVerified       Boolean       @default(false)
   moderationReason String?
-  
+
   // Relations
   reviewer       User    @relation("SentReviews", fields: [reviewerId], references: [id])
   reviewerId     Int
@@ -414,7 +408,7 @@ model Review {
   bookingId      Int?    @unique
   moderatedBy    User?   @relation("ModeratedReviews", fields: [moderatedById], references: [id])
   moderatedById  Int?
-  
+
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   approvedAt   DateTime?
@@ -429,7 +423,6 @@ model Review {
   @@unique([reviewerId, postId])
 }
 
-
 model Booking {
   id          Int           @id @default(autoincrement())
   post        Post          @relation("PostBookings", fields: [postId], references: [id])
@@ -442,12 +435,12 @@ model Booking {
   totalAmount Float
   guests      Int           @default(1)
   specialRequests String?
-  
+
   // Relations - REMOVED @relation attribute from payment field
   payment     Payment?      // Remove @relation attribute here
   paymentId   Int?          @unique
   review      Review?
-  
+
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   cancelledAt DateTime?
@@ -457,7 +450,7 @@ model Booking {
   @@index([userId])
   @@index([startDate, endDate])
   @@index([status])
-  
+
   // Prevent overlapping bookings for the same rental property
   @@unique([postId, startDate, endDate])
 }
@@ -482,7 +475,6 @@ model Notification {
   @@index([createdAt])
   @@index([expiresAt])
 }
-
 
 model AdminActionLog {
   id          Int       @id @default(autoincrement())
