@@ -110,6 +110,31 @@ app.use("/api/sales", require("./routes/saleRoute"));
 
 app.use("/api/reviews", require("./routes/reviewRoute"));
 
+app.get("/api/debug/db-check", async (req, res) => {
+  try {
+    const postCount = await prisma.post.count();
+    const userCount = await prisma.user.count();
+    const recentPosts = await prisma.post.findMany({
+      take: 5,
+      select: { id: title, title: true, isActive: true },
+    });
+
+    res.json({
+      success: true,
+      postCount,
+      userCount,
+      recentPosts,
+      database: process.env.DATABASE_URL ? "Connected" : "No URL",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      databaseUrl: process.env.DATABASE_URL ? "Set" : "Not set",
+    });
+  }
+});
+
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "Server is running" });
 });
