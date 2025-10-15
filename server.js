@@ -7,6 +7,7 @@ const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
 const allowedOrigine = require("./config/allowedOringin");
 const corsOptions = require("./config/corsOptions");
+const prisma = require("./lib/prisma");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
@@ -116,7 +117,7 @@ app.get("/api/debug/db-check", async (req, res) => {
     const userCount = await prisma.user.count();
     const recentPosts = await prisma.post.findMany({
       take: 5,
-      select: { id: title, title: true, isActive: true },
+      select: { id: true, title: true, isActive: true }, // ✅ Fixed this line
     });
 
     res.json({
@@ -131,6 +132,27 @@ app.get("/api/debug/db-check", async (req, res) => {
       success: false,
       error: error.message,
       databaseUrl: process.env.DATABASE_URL ? "Set" : "Not set",
+    });
+  }
+});
+app.get("/api/test-posts", async (req, res) => {
+  try {
+    const allPosts = await prisma.post.findMany({
+      include: {
+        owner: { select: { username: true } },
+        postDetail: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      count: allPosts.length,
+      posts: allPosts,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
     });
   }
 });
