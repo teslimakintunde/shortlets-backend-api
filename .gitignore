@@ -44,4 +44,3 @@ Thumbs.db
 *.swo
 
 # Prisma (but NOT the generated client)
-/prisma/migrations/
