@@ -5,6 +5,7 @@ const { Server } = require("socket.io");
 const http = require("http");
 const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
+const path = require("path");
 const allowedOrigine = require("./config/allowedOringin");
 const corsOptions = require("./config/corsOptions");
 const prisma = require("./lib/prisma");
